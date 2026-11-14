@@ -228,6 +228,12 @@ mvn test
 
 Os testes de regras de negócio estão em `src/test/java/br/com/fiap/recicleglobal/bo/DoacaoBOTest.java`.
 
+## Postman
+
+A collection [`RecicleGlobal.postman_collection.json`](postman/RecicleGlobal.postman_collection.json) reúne as operações de CRUD, o fluxo de solicitações e os testes de validação. Importe o arquivo no Postman e ajuste a variável `baseUrl` para o ambiente desejado (o padrão é `http://localhost:8080`).
+
+As pastas estão organizadas na ordem de execução. Os testes de criação armazenam os IDs retornados pela API nas variáveis da collection; as operações de escrita modificam os registros do banco de dados.
+
 ## Docker e deploy
 
 O [`Dockerfile`](Dockerfile) utiliza build em múltiplos estágios com Maven e Java 21. Para gerar e executar a imagem:

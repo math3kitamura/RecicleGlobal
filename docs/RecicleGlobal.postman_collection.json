@@ -1,0 +1,1537 @@
+{
+  "info": {
+    "name": "RecicleGlobal API",
+    "_postman_id": "fd9ba806-69ce-42ef-b04a-58d087b56e81",
+    "description": "API REST de doações solidárias.\n\nA collection cobre todos os endpoints disponíveis: CRUD de usuários, instituições e doações, fluxo de solicitações e validações de negócio.\n\nORDEM DE EXECUÇÃO: Serviço → Usuários → Instituições → Doações → Solicitações → Validações. Os IDs retornados pelo Oracle são armazenados nas variáveis da collection e reutilizados nas requisições seguintes.\n\nSEGURANÇA: o valor inicial de baseUrl é http://localhost:8080. POST, PUT e DELETE alteram dados; utilize um ambiente de testes e ajuste baseUrl antes de executar as pastas. Nenhuma credencial está armazenada neste arquivo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  "item": [
+    {
+      "name": "00 | Serviço",
+      "description": "Consultas somente leitura.",
+      "item": [
+        {
+          "name": "01 | GET | Estado da API",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "pm.test(\"Serviço online\", function () { pm.expect(responseData.status).to.equal(\"online\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/status",
+            "description": "Estado da API. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "02 | GET | Página inicial",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/",
+            "description": "Página inicial. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 | Usuários - CRUD",
+      "description": "Execute em ordem. Os emails são únicos a cada criação e os IDs são capturados automaticamente.",
+      "item": [
+        {
+          "name": "01 | POST | Cadastrar doador",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const token = Date.now().toString(36) + Math.floor(Math.random() * 100000).toString(36);",
+                  "pm.collectionVariables.set(\"emailDoador\", \"recicleglobal.doador.\" + token + \"@example.com\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "if (pm.response.code === 201 && responseData && responseData.id !== undefined) { pm.collectionVariables.set(\"usuarioDoadorId\", String(responseData.id)); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/usuarios",
+            "description": "Cadastrar doador. Resposta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Ana Exemplo\",\n  \"email\": \"{{emailDoador}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 | POST | Cadastrar interessado",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const token = Date.now().toString(36) + Math.floor(Math.random() * 100000).toString(36);",
+                  "pm.collectionVariables.set(\"emailInteressado\", \"recicleglobal.interessado.\" + token + \"@example.com\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "if (pm.response.code === 201 && responseData && responseData.id !== undefined) { pm.collectionVariables.set(\"usuarioInteressadoId\", String(responseData.id)); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/usuarios",
+            "description": "Cadastrar interessado. Resposta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Bruno Exemplo\",\n  \"email\": \"{{emailInteressado}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 | POST | Cadastrar usuário temporário",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const token = Date.now().toString(36) + Math.floor(Math.random() * 100000).toString(36);",
+                  "pm.collectionVariables.set(\"emailTemporario\", \"recicleglobal.temp.\" + token + \"@example.com\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "if (pm.response.code === 201 && responseData && responseData.id !== undefined) { pm.collectionVariables.set(\"usuarioTemporarioId\", String(responseData.id)); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/usuarios",
+            "description": "Cadastrar usuário temporário. Resposta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Usuário Temporário\",\n  \"email\": \"{{emailTemporario}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 | GET | Listar usuários",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em lista\", function () { pm.expect(responseData).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/usuarios",
+            "description": "Listar usuários. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "05 | GET | Buscar doador por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/usuarios/{{usuarioDoadorId}}",
+            "description": "Buscar doador por ID. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "06 | PUT | Atualizar doador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "pm.test(\"Nome atualizado\", function () { pm.expect(responseData.nome).to.equal(\"Ana Exemplo Atualizada\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/usuarios/{{usuarioDoadorId}}",
+            "description": "Atualizar doador. Resposta esperada: HTTP 200.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Ana Exemplo Atualizada\",\n  \"email\": \"{{emailDoador}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 | DELETE | Excluir usuário temporário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/usuarios/{{usuarioTemporarioId}}",
+            "description": "Excluir usuário temporário. Resposta esperada: HTTP 204."
+          },
+          "response": []
+        },
+        {
+          "name": "08 | GET | Confirmar exclusão do usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Erro padronizado\", function () { pm.expect(responseData).to.have.property(\"erro\"); pm.expect(responseData.detalhes).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/usuarios/{{usuarioTemporarioId}}",
+            "description": "Confirmar exclusão do usuário. Resposta esperada: HTTP 404."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 | Instituições - CRUD",
+      "description": "CRUD em uma instituição de exemplo criada pela própria collection. Os registros anteriores não são alterados.",
+      "item": [
+        {
+          "name": "01 | GET | Listar instituições",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em lista\", function () { pm.expect(responseData).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/instituicoes",
+            "description": "Listar instituições. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "02 | POST | Cadastrar instituição",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "if (pm.response.code === 201 && responseData && responseData.id !== undefined) { pm.collectionVariables.set(\"instituicaoId\", String(responseData.id)); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/instituicoes",
+            "description": "Cadastrar instituição. Resposta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Instituição RecicleGlobal Exemplo\",\n  \"descricao\": \"Ponto de recebimento de doações\",\n  \"bairro\": \"Moema\",\n  \"latitude\": -23.603,\n  \"longitude\": -46.667\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 | GET | Buscar instituição por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/instituicoes/{{instituicaoId}}",
+            "description": "Buscar instituição por ID. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "04 | PUT | Atualizar instituição",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "pm.test(\"Bairro atualizado\", function () { pm.expect(responseData.bairro).to.equal(\"Saúde\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/instituicoes/{{instituicaoId}}",
+            "description": "Atualizar instituição. Resposta esperada: HTTP 200.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Instituição RecicleGlobal Atualizada\",\n  \"descricao\": \"Recebimento de doações\",\n  \"bairro\": \"Saúde\",\n  \"latitude\": -23.569,\n  \"longitude\": -46.645\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 | DELETE | Excluir instituição",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/instituicoes/{{instituicaoId}}",
+            "description": "Excluir instituição. Resposta esperada: HTTP 204."
+          },
+          "response": []
+        },
+        {
+          "name": "06 | GET | Confirmar exclusão da instituição",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Erro padronizado\", function () { pm.expect(responseData).to.have.property(\"erro\"); pm.expect(responseData.detalhes).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/instituicoes/{{instituicaoId}}",
+            "description": "Confirmar exclusão da instituição. Resposta esperada: HTTP 404."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 | Doações - CRUD",
+      "description": "Doação principal para o fluxo de retirada, doação temporária para DELETE, cenário de cancelamento e anúncio de alimento com validade futura.",
+      "item": [
+        {
+          "name": "01 | POST | Publicar doação principal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "if (pm.response.code === 201 && responseData && responseData.id !== undefined) { pm.collectionVariables.set(\"doacaoId\", String(responseData.id)); }",
+                  "pm.test(\"Doação disponível\", function () { pm.expect(responseData.status).to.equal(\"DISPONIVEL\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doacoes",
+            "description": "Publicar doação principal. Resposta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{usuarioDoadorId}},\n  \"categoria\": \"ROUPA\",\n  \"titulo\": \"Casacos para doação\",\n  \"descricao\": \"Três casacos higienizados\",\n  \"quantidade\": 3,\n  \"dataValidade\": null,\n  \"bairro\": \"Vila Mariana\",\n  \"latitude\": -23.5863,\n  \"longitude\": -46.6325\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 | GET | Buscar doação por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/doacoes/{{doacaoId}}",
+            "description": "Buscar doação por ID. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "03 | PUT | Atualizar doação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "pm.test(\"Título atualizado\", function () { pm.expect(responseData.titulo).to.equal(\"Casacos adultos em bom estado\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doacoes/{{doacaoId}}",
+            "description": "Atualizar doação. Resposta esperada: HTTP 200.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{usuarioDoadorId}},\n  \"categoria\": \"ROUPA\",\n  \"titulo\": \"Casacos adultos em bom estado\",\n  \"descricao\": \"Peças prontas para retirada\",\n  \"quantidade\": 3,\n  \"dataValidade\": null,\n  \"bairro\": \"Vila Mariana\",\n  \"latitude\": -23.5863,\n  \"longitude\": -46.6325\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 | GET | Filtrar roupas disponíveis",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em lista\", function () { pm.expect(responseData).to.be.an(\"array\"); });",
+                  "pm.test(\"Filtro respeitado\", function () { responseData.forEach(function (d) { pm.expect(d.categoria).to.equal(\"ROUPA\"); pm.expect(d.status).to.equal(\"DISPONIVEL\"); }); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/doacoes?categoria=ROUPA&status=DISPONIVEL",
+            "description": "Filtrar roupas disponíveis. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "05 | POST | Publicar doação temporária",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "if (pm.response.code === 201 && responseData && responseData.id !== undefined) { pm.collectionVariables.set(\"doacaoTemporariaId\", String(responseData.id)); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doacoes",
+            "description": "Publicar doação temporária. Resposta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{usuarioDoadorId}},\n  \"categoria\": \"ROUPA\",\n  \"titulo\": \"Doação temporária\",\n  \"descricao\": \"Peças para teste de exclusão\",\n  \"quantidade\": 2,\n  \"dataValidade\": null,\n  \"bairro\": \"Vila Mariana\",\n  \"latitude\": -23.5863,\n  \"longitude\": -46.6325\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06 | DELETE | Excluir doação temporária",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/doacoes/{{doacaoTemporariaId}}",
+            "description": "Excluir doação temporária. Resposta esperada: HTTP 204."
+          },
+          "response": []
+        },
+        {
+          "name": "07 | GET | Confirmar exclusão da doação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Erro padronizado\", function () { pm.expect(responseData).to.have.property(\"erro\"); pm.expect(responseData.detalhes).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/doacoes/{{doacaoTemporariaId}}",
+            "description": "Confirmar exclusão da doação. Resposta esperada: HTTP 404."
+          },
+          "response": []
+        },
+        {
+          "name": "08 | POST | Publicar doação para cancelamento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "if (pm.response.code === 201 && responseData && responseData.id !== undefined) { pm.collectionVariables.set(\"doacaoCancelamentoId\", String(responseData.id)); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doacoes",
+            "description": "Publicar doação para cancelamento. Resposta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{usuarioDoadorId}},\n  \"categoria\": \"ROUPA\",\n  \"titulo\": \"Agasalhos para retirada\",\n  \"descricao\": \"Itens reservados ao teste de cancelamento\",\n  \"quantidade\": 2,\n  \"dataValidade\": null,\n  \"bairro\": \"Vila Mariana\",\n  \"latitude\": -23.5863,\n  \"longitude\": -46.6325\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "09 | POST | Publicar alimento válido",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const futura = new Date(); futura.setUTCDate(futura.getUTCDate() + 45); pm.collectionVariables.set(\"validadeFutura\", futura.toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "if (pm.response.code === 201 && responseData && responseData.id !== undefined) { pm.collectionVariables.set(\"doacaoAlimentoId\", String(responseData.id)); }",
+                  "pm.test(\"Alimento válido\", function () { pm.expect(responseData.categoria).to.equal(\"ALIMENTO\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doacoes",
+            "description": "Publicar alimento válido. Resposta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{usuarioDoadorId}},\n  \"categoria\": \"ALIMENTO\",\n  \"titulo\": \"Cestas de alimentos\",\n  \"descricao\": \"Itens lacrados em condições adequadas\",\n  \"quantidade\": 6,\n  \"dataValidade\": \"{{validadeFutura}}\",\n  \"bairro\": \"Pinheiros\",\n  \"latitude\": -23.5616,\n  \"longitude\": -46.6919\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10 | GET | Filtrar alimentos disponíveis",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em lista\", function () { pm.expect(responseData).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/doacoes?categoria=ALIMENTO&status=DISPONIVEL",
+            "description": "Filtrar alimentos disponíveis. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "11 | DELETE | Excluir alimento de demonstração",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/doacoes/{{doacaoAlimentoId}}",
+            "description": "Excluir alimento de demonstração. Resposta esperada: HTTP 204."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 | Solicitações - retirada",
+      "description": "A API usa estados em vez de DELETE para solicitações. Inclui aceite, conclusão e cancelamento de uma solicitação já aceita.",
+      "item": [
+        {
+          "name": "01 | POST | Criar solicitação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "if (pm.response.code === 201 && responseData && responseData.id !== undefined) { pm.collectionVariables.set(\"solicitacaoId\", String(responseData.id)); }",
+                  "pm.test(\"Pendente\", function () { pm.expect(responseData.status).to.equal(\"PENDENTE\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/solicitacoes",
+            "description": "Criar solicitação. Resposta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doacaoId\": {{doacaoId}},\n  \"interessadoId\": {{usuarioInteressadoId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 | GET | Listar solicitações",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em lista\", function () { pm.expect(responseData).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/solicitacoes",
+            "description": "Listar solicitações. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "03 | GET | Filtrar solicitações por doação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em lista\", function () { pm.expect(responseData).to.be.an(\"array\"); });",
+                  "pm.test(\"Filtro por doação\", function () { responseData.forEach(function (s) { pm.expect(String(s.doacaoId)).to.equal(pm.collectionVariables.get(\"doacaoId\")); }); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/solicitacoes?doacaoId={{doacaoId}}",
+            "description": "Filtrar solicitações por doação. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "04 | PUT | Aceitar solicitação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "pm.test(\"Aceita\", function () { pm.expect(responseData.status).to.equal(\"ACEITA\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/api/solicitacoes/{{solicitacaoId}}/aceitar",
+            "description": "Aceitar solicitação. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "05 | GET | Confirmar doação reservada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "pm.test(\"Reservada\", function () { pm.expect(responseData.status).to.equal(\"RESERVADA\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/doacoes/{{doacaoId}}",
+            "description": "Confirmar doação reservada. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "06 | PUT | Concluir solicitação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "pm.test(\"Concluída\", function () { pm.expect(responseData.status).to.equal(\"CONCLUIDA\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/api/solicitacoes/{{solicitacaoId}}/concluir",
+            "description": "Concluir solicitação. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "07 | GET | Confirmar doação concluída",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "pm.test(\"Concluída\", function () { pm.expect(responseData.status).to.equal(\"CONCLUIDA\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/doacoes/{{doacaoId}}",
+            "description": "Confirmar doação concluída. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "08 | POST | Criar solicitação para cancelamento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "if (pm.response.code === 201 && responseData && responseData.id !== undefined) { pm.collectionVariables.set(\"solicitacaoCancelamentoId\", String(responseData.id)); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/solicitacoes",
+            "description": "Criar solicitação para cancelamento. Resposta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doacaoId\": {{doacaoCancelamentoId}},\n  \"interessadoId\": {{usuarioInteressadoId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "09 | PUT | Aceitar solicitação para cancelamento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "pm.test(\"Aceita\", function () { pm.expect(responseData.status).to.equal(\"ACEITA\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/api/solicitacoes/{{solicitacaoCancelamentoId}}/aceitar",
+            "description": "Aceitar solicitação para cancelamento. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "10 | PUT | Cancelar solicitação aceita",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "pm.test(\"Cancelada\", function () { pm.expect(responseData.status).to.equal(\"CANCELADA\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/api/solicitacoes/{{solicitacaoCancelamentoId}}/cancelar",
+            "description": "Cancelar solicitação aceita. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        },
+        {
+          "name": "11 | GET | Confirmar disponibilidade após cancelamento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Resposta em objeto\", function () { pm.expect(responseData).to.be.an(\"object\"); });",
+                  "pm.test(\"Disponível\", function () { pm.expect(responseData.status).to.equal(\"DISPONIVEL\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/doacoes/{{doacaoCancelamentoId}}",
+            "description": "Confirmar disponibilidade após cancelamento. Resposta esperada: HTTP 200."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 | Validações e erros",
+      "description": "Verificação de regras de negócio e tratamento de exceções. Execute após os cenários de CRUD e retirada.",
+      "item": [
+        {
+          "name": "01 | POST | Recusar alimento vencido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Erro padronizado\", function () { pm.expect(responseData).to.have.property(\"erro\"); pm.expect(responseData.detalhes).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doacoes",
+            "description": "Recusar alimento vencido (400). Resposta esperada: HTTP 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{usuarioDoadorId}},\n  \"categoria\": \"ALIMENTO\",\n  \"titulo\": \"Cestas de alimentos\",\n  \"descricao\": \"Itens lacrados em condições adequadas\",\n  \"quantidade\": 6,\n  \"dataValidade\": \"2020-01-01\",\n  \"bairro\": \"Pinheiros\",\n  \"latitude\": -23.5616,\n  \"longitude\": -46.6919\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 | POST | Recusar quantidade inválida (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Erro padronizado\", function () { pm.expect(responseData).to.have.property(\"erro\"); pm.expect(responseData.detalhes).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/doacoes",
+            "description": "Recusar quantidade inválida (400). Resposta esperada: HTTP 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{usuarioDoadorId}},\n  \"categoria\": \"ROUPA\",\n  \"titulo\": \"Quantidade inválida\",\n  \"descricao\": \"Teste de validação\",\n  \"quantidade\": 0,\n  \"dataValidade\": null,\n  \"bairro\": \"Vila Mariana\",\n  \"latitude\": -23.5863,\n  \"longitude\": -46.6325\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 | POST | Recusar retirada da própria doação (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Erro padronizado\", function () { pm.expect(responseData).to.have.property(\"erro\"); pm.expect(responseData.detalhes).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/solicitacoes",
+            "description": "Recusar retirada da própria doação (400). Resposta esperada: HTTP 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doacaoId\": {{doacaoCancelamentoId}},\n  \"interessadoId\": {{usuarioDoadorId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 | PUT | Recusar aceite de solicitação concluída (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Erro padronizado\", function () { pm.expect(responseData).to.have.property(\"erro\"); pm.expect(responseData.detalhes).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/api/solicitacoes/{{solicitacaoId}}/aceitar",
+            "description": "Recusar aceite de solicitação concluída (400). Resposta esperada: HTTP 400."
+          },
+          "response": []
+        },
+        {
+          "name": "05 | GET | Buscar usuário inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Erro padronizado\", function () { pm.expect(responseData).to.have.property(\"erro\"); pm.expect(responseData.detalhes).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/usuarios/999999999999",
+            "description": "Buscar usuário inexistente (404). Resposta esperada: HTTP 404."
+          },
+          "response": []
+        },
+        {
+          "name": "06 | POST | Recusar email duplicado (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", function () { pm.response.to.have.status(409); });",
+                  "let responseData = null;",
+                  "try { responseData = pm.response.json(); } catch (error) { responseData = null; }",
+                  "pm.test(\"Retorno JSON válido\", function () { pm.expect(responseData).to.not.equal(null); });",
+                  "pm.test(\"Erro padronizado\", function () { pm.expect(responseData).to.have.property(\"erro\"); pm.expect(responseData.detalhes).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/usuarios",
+            "description": "Recusar email duplicado (409). Resposta esperada: HTTP 409.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Duplicado\",\n  \"email\": \"{{emailDoador}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "Base da API. Produção: https://recicleglobal.onrender.com"
+    },
+    {
+      "key": "usuarioDoadorId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "usuarioInteressadoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "usuarioTemporarioId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "instituicaoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "doacaoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "doacaoTemporariaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "doacaoCancelamentoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "doacaoAlimentoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "solicitacaoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "solicitacaoCancelamentoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "emailDoador",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "emailInteressado",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "emailTemporario",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "validadeFutura",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
